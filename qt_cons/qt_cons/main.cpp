@@ -1,9 +1,19 @@
 
 #include <QtCore/QCoreApplication>
-#include "Windows.h"
+
+
+
+
+
 #include <stdio.h>
+
+//#include <curl/types.h>
+//#include <curl/easy.h>
 #include <string>
-#include <comdef.h>
+
+
+
+
 #include <QtCore/QCoreApplication>
 #include <openbr/openbr_plugin.h>
 #include <QFile>
@@ -14,89 +24,62 @@
 
 
 
-wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
-{
-	wchar_t* wString = new wchar_t[MAX_PATH];
-	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, MAX_PATH);
-	return wString;
+
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+	size_t written;
+	written = fwrite(ptr, size, nmemb, stream);
+	return written;
 }
-
-void putArrayToFile(char * from_file, char* to_file, QSharedPointer<br::Transform> transform)
+//using namespace cv;
+int main(int argc, char *argv[])
 {
-	br::Template queryA(from_file);
+	
 
+
+
+	//QCoreApplication a(argc, argv);
+	
+	br::Context::initialize(argc, argv);
+
+	// Retrieve classes for enrolling and comparing templates using the FaceRecognition algorithm
+	QSharedPointer<br::Transform> transform = br::Transform::fromAlgorithm("FaceRecognition");
+	//QSharedPointer<br::Distance> distance = br::Distance::fromAlgorithm("FaceRecognition");
+
+	// Initialize templates
+	if (argc == 1) return 0;
+	
+	br::Template queryA(argv[1]);
+
+	
+
+
+	//br::Template::toUniversalTemplate(target);
+
+
+
+	//if (argv[1]="in")
+	// Enroll templates
 	queryA >> *transform;
 
-		
-	QString filename = to_file;
+
+	//transform.
+	QString filename = argv[2];
 	QFile file(filename);
 
 	if (file.open(QIODevice::ReadWrite))
 	{
-		QDataStream stream(&file);
+	QDataStream stream(&file);
 		stream << queryA;
-	}
-
-	file.close();
-}
-
-bool getPhotoFiles(char * from_dir, char * to_dir){
-	QSharedPointer<br::Transform> transform = br::Transform::fromAlgorithm("FaceRecognition");
-	WIN32_FIND_DATA fd;
-	HANDLE hFind;
-	char * f_dir = new char[MAX_PATH];
-	strcpy(f_dir, from_dir);
-	strcat(f_dir, "*.jpg");
-	wchar_t *fPath;
-	fPath = convertCharArrayToLPCWSTR(f_dir);
-	hFind = FindFirstFile(convertCharArrayToLPCWSTR(f_dir), &fd);
-	if (!hFind) return false;
-	if ((wcscmp(fd.cFileName, L".") != 0) && (wcscmp(fd.cFileName, L"..") != 0)){
-
-		char * full_file_name = new char[MAX_PATH];
-		char * full_outfile_name = new char[MAX_PATH];
-		_bstr_t b(fd.cFileName);
-		const char* c = b;
-		strcpy(full_file_name, from_dir);
-		strcpy(full_outfile_name, to_dir);
-		strcat(full_file_name, c);
-		strcat(full_outfile_name, c);
-		strcat(full_outfile_name, ".f");
-		printf("%s\n", full_outfile_name);
-		putArrayToFile(full_file_name, full_outfile_name, transform);
-
-	}
-	while (FindNextFile(hFind, &fd)){
-		if ((wcscmp(fd.cFileName, L".") != 0) && (wcscmp(fd.cFileName, L"..") != 0)){
-
-			char * full_file_name = new char[MAX_PATH];
-			char * full_outfile_name = new char[MAX_PATH];
-			_bstr_t b(fd.cFileName);
-			const char* c = b;
-			strcpy(full_file_name, from_dir);
-			strcpy(full_outfile_name, to_dir);
-			strcat(full_file_name, c);
-			strcat(full_outfile_name, c);
-			strcat(full_outfile_name, ".f");
-			printf("%s\n", full_outfile_name);
-			putArrayToFile(full_file_name, full_outfile_name, transform);
-
-		}
-	}
-	return true;
 }
 
 
-int main(int argc, char *argv[])
-{
+	//QVariantMap datamap = target.file.localMetadata();
 
-	if (argc != 3) return 1;
-	
-	br::Context::initialize(argc, argv);
-		
-	getPhotoFiles(argv[1], argv[2]);
-		
+	//for(QVariantMap::const_iterator iter = datamap.begin(); iter != datamap.end(); ++iter) {                      qDebug() << "Keys Are: " << iter.key() << "Values Are: " << iter.value();                    }    float comparisonA = distance->compare(target, queryA);    printf("Genuine match score: %.3f\n", comparisonA);
+
+
 	br::Context::finalize();
-	
+	//printf("end");
+	//system("pause");
 	return 0;
 }
